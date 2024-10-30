@@ -1,12 +1,14 @@
+import os
 import numpy as np
 import pandas as pd
 from collections import defaultdict
 from exp_reader import ExpReader
 from scipy import integrate
 from scipy.spatial.transform import Rotation as R
-from hdf5_utils import save_dict_to_hdf5, load_dict_from_hdf5
+from utils.hdf5_utils import save_dict_to_hdf5, load_dict_from_hdf5
 from pathlib import Path
 from plotting_skills_analysis import StrokeMetricsVisualizer, plot_3d_vx_rmvd
+import h5py
 
 
 # {short_name: [color, "long_name"]}
@@ -117,36 +119,35 @@ class StrokeExtractor:
 
         return is_within_period
 
-    def _get_strokes(self, d_poses, data_ts, data_vrm_mask, k=3):
+    def _get_strokes(self, d_poses, data_ts, data_vrm_mask, k=3, output_csv_path=None):
         '''
         Returns a list of 1's and 0's indicating whether a stroke has
         ended at the timestamp at its index and the timestamps.
+        Optionally, saves the results to a CSV file.
 
-            Parameters:
-                stream (np.ndarray): Drill poses over course of procedure
-                timepts (np.ndarray): Time stamps of all drill poses
+        Parameters:
+            d_poses (np.ndarray): Drill poses over course of procedure
+            data_ts (np.ndarray): Time stamps of all drill poses
+            data_vrm_mask (np.ndarray): Mask for filtering drill data
+            k (int): Number of neighboring points for computing k-cosines
+            output_csv_path (str): Optional. Path to save the CSV file.
 
-            Returns:
-                F_c (np.ndarray): List of 1's and 0's indicating whether a
-                                stroke has ended at the timestamp at its index
-                st (np.ndarray): Timestamps of stroke ends
+        Returns:
+            np.ndarray: List of 1's and 0's indicating whether a stroke has ended.
         '''
-    
+        
         d_pos = d_poses[data_vrm_mask][:,:3]
         data_ts = data_ts[data_vrm_mask]
         K_p = []
 
         # Compute k-cosines for each pivot point
         for pivot, P in enumerate(d_pos):
-
-            # Cannot consider edge points as central k's
             if (pivot - k < 0) or (pivot + k >= d_pos.shape[0]):
                 continue
 
             # Get vector of previous k points and pivot and after k points and pivot
             v_bf = d_pos[pivot] - d_pos[pivot - k]
             v_af = d_pos[pivot] - d_pos[pivot + k]
-            
             cos_theta = np.dot(v_bf, v_af) / (np.linalg.norm(v_bf) * np.linalg.norm(v_af))
             theta = np.arccos(cos_theta) * 180 / np.pi
             K = 180 - theta # now in degrees
@@ -162,38 +163,42 @@ class StrokeExtractor:
 
         stroke_ends = [1 if k_P > mu + sig else 0 for k_P in K_p]
         stroke_ends = np.array(stroke_ends)
-    
+
         # Calculate speeds as tiebreak for consecutive pivot points
         position_diffs = np.diff(d_pos, axis=0)
         dists = np.linalg.norm(position_diffs, axis=1)
         time_diffs = np.diff(data_ts)
-        speeds = dists/time_diffs
-        speeds = np.insert(speeds, 0, 0)   
+        speeds = dists / time_diffs
+        speeds = np.insert(speeds, 0, 0)
 
-        pivot_props = np.where(stroke_ends == 1)[0] # indices where stroke_ends == 1
+        pivot_props = np.where(stroke_ends == 1)[0]  # Indices where stroke_ends == 1
 
         # Iterate over pivot_props and eliminate consecutive ones
         i = 0
         while i < len(pivot_props) - 1:
-            # Check for consecutive indices
             if pivot_props[i] + 1 == pivot_props[i + 1]:
-                # Find the start and end of the consecutive ones sequence
                 start = i
                 while i < len(pivot_props) - 1 and pivot_props[i] + 1 == pivot_props[i + 1]:
                     i += 1
                 end = i
-                
-                # Identify the index with the minimum corresponding speed in the sequence
                 min_val_index = np.argmin(speeds[pivot_props[start:end + 1]])
-                
-                # Set all ones in the sequence to 0 except the minimum speed
                 for j in range(start, end + 1):
                     if j != start + min_val_index:
                         stroke_ends[pivot_props[j]] = 0
             i += 1
 
         stroke_ends[len(stroke_ends)-1] = 1
-            
+
+        # Optionally save the result to a CSV file
+        if output_csv_path:
+            # Create a DataFrame to store the timestamps and stroke ends
+            stroke_data = pd.DataFrame({
+                'Timestamp': data_ts,
+                'Stroke_End': stroke_ends
+            })
+            stroke_data.to_csv(output_csv_path, index=False)
+            print(f"Stroke end data saved to {output_csv_path}")
+
         return stroke_ends
 
 class StrokeMetrics:
@@ -258,7 +263,10 @@ class StrokeMetrics:
         self.stroke_endtimes = self.get_stroke_endtimes(self.stroke_ends, self.data_vrm_mask, self.exp.data_ts)
         self.num_buckets = num_buckets
 
-        self.bucket_dict = self.assign_strokes_to_voxel_buckets()  
+        self.bucket_dict = self.assign_strokes_to_voxel_buckets()
+        
+        # Add this line to check if data is loaded correctly
+        # print(f"Experiment data: {self.exp.d_poses}, {self.exp.data_ts}, {self.exp.v_rm_ts}")  
 
     def get_stroke_endtimes(self, stroke_ends, data_vrm_mask, data_ts):
         """
@@ -684,6 +692,7 @@ class StrokeMetrics:
             metrics_dict = {'length': length, 'velocity': velocity, 'acceleration': acceleration, 'jerk': jerk, 'vxls_removed': voxels_removed,
                             'curvature': curvature, 'angle_wrt_camera': orientation_wrt_camera}
        
+        # print(f"Metrics calculated: {metrics_dict}") # for checking if metrics are being calculated
         return metrics_dict
 
     def assign_strokes_to_voxel_buckets(self):
@@ -719,7 +728,7 @@ class StrokeMetrics:
         
         return bucket_dict
     
-    def save_stroke_metrics_and_buckets(output_path, self):
+    def save_stroke_metrics_and_buckets(self, output_path):
         """
         Saves the stroke metrics and voxel bucket dict to HDF5 files.
         """
@@ -884,15 +893,128 @@ class GenMetrics:
 
 
 def main():
-    exp_csv = pd.read_csv('/Users/nimeshnagururu/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/exp_dirs_DONOTOVERWRITE.csv')
+    exp_csv = pd.read_csv('/Users/orenw/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/exp_dirs_DONOTOVERWRITE.csv')
     exps = exp_csv['exp_dir']
 
-    # for i in range(len(exps)):
-    novice_exp = ExpReader(exps[46], verbose = True)  
-    novice_stroke_extr = StrokeExtractor(novice_exp)
-    novice_stroke_metr = StrokeMetrics(novice_stroke_extr, num_buckets = 5)
-    novice_metrics_dict = novice_stroke_metr.calc_metrics()
-    novice_bucket_dict = novice_stroke_metr.assign_strokes_to_voxel_buckets()
+    for i in range(len(exps)):
+        exp_dir = exps[i]
+        print(f"Processing: {exp_dir}")
+
+        # Check if the directory exists
+        if not os.path.exists(exp_dir):
+            print(f"Directory does not exist: {exp_dir}. Skipping.")
+            continue  # Skip to the next iteration if the directory doesn't exist
+
+        # Check if there are any files in the experiment directory
+        num_files = len([f for f in os.listdir(exp_dir) if os.path.isfile(os.path.join(exp_dir, f))])
+
+        if num_files == 0:
+            print(f"Number of Files: {num_files}. Skipping {exp_dir} due to no files.")
+            continue  # Skip to the next iteration if there are no files
+
+        # Proceed with processing if the directory exists and contains files
+        try:
+            novice_exp = ExpReader(exp_dir, verbose=True)
+            novice_stroke_extr = StrokeExtractor(novice_exp)
+            novice_stroke_metr = StrokeMetrics(novice_stroke_extr, num_buckets=5)
+            
+            # Define the output path for metrics and CSV files
+            output_path = Path(f"/Users/orenw/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/extracted_metrics/{os.path.basename(exp_dir)}")
+            output_path.mkdir(parents=True, exist_ok=True)  # Create the output directory if it doesn't exist
+
+            # Save stroke metrics and bucket assignments to the output path
+            novice_stroke_metr.save_stroke_metrics_and_buckets(output_path)
+            
+            # Generate the output path for the CSV file
+            csv_output_path = output_path / "stroke_end_data.csv"
+            
+            # Save stroke ends to CSV
+            stroke_ends = novice_stroke_extr._get_strokes(
+                novice_exp.d_poses, 
+                novice_exp.data_ts, 
+                novice_stroke_extr.data_vrm_mask, 
+                k=3, 
+                output_csv_path=str(csv_output_path)
+            )
+
+            print(f"Stroke ends CSV saved to: {csv_output_path}")
+
+            # Combine the stroke end data and stroke metrics
+            # Load stroke_end_data.csv
+            stroke_end_data = pd.read_csv(csv_output_path)
+
+            # Load stroke_metrics.hdf5 (assuming it's located in the same directory)
+            stroke_metrics_path = output_path / 'stroke_metrics.hdf5'
+            with h5py.File(stroke_metrics_path, 'r') as f:
+                stroke_lengths = f['length'][:]
+                velocities = f['velocity'][:]
+                accelerations = f['acceleration'][:]
+                jerks = f['jerk'][:]
+                curvatures = f['curvature'][:]
+                voxels_removed = f['vxls_removed'][:]
+                angle_wrt_camera = f['angle_wrt_camera'][:]
+
+            # Create a DataFrame for stroke metrics with the valid fields
+            stroke_metrics_df = pd.DataFrame({
+                'Length': stroke_lengths,
+                'Velocity': velocities,
+                'Acceleration': accelerations,
+                'Jerk': jerks,
+                'Curvature': curvatures,
+                'Voxels Removed': voxels_removed,
+                'Angle with Respect to Camera': angle_wrt_camera,
+            })
+
+            # Combine stroke_end_data with stroke_metrics DataFrame
+            combined_df = stroke_end_data.join(stroke_metrics_df)
+
+            # Create a list to store the 'Stroke End Time' values
+            time_values = []
+
+            # Step 2: Populate the 'Stroke End Time' values list
+            stroke_end_indices = combined_df.index[combined_df['Stroke_End'] == 1].tolist()
+
+            if stroke_end_indices:
+                # First occurrence where Stroke_End = 1
+                first_stroke_index = stroke_end_indices[0]
+                first_timestamp = combined_df.loc[first_stroke_index, 'Timestamp']
+                initial_timestamp = combined_df.loc[0, 'Timestamp']
+
+                # Calculate the time difference for the first occurrence
+                time_values.append(first_timestamp - initial_timestamp)  # Append to the list
+
+                # Loop through the remaining indices where Stroke_End = 1
+                for i in range(1, len(stroke_end_indices)):
+                    current_index = stroke_end_indices[i]
+                    previous_index = stroke_end_indices[i - 1]
+
+                    # Calculate time difference between consecutive Stroke_End = 1 occurrences
+                    time_diff = combined_df.loc[current_index, 'Timestamp'] - combined_df.loc[previous_index, 'Timestamp']
+
+                    # Add this difference to the previous "time" value and append to the list
+                    time_values.append(time_values[-1] + time_diff)
+
+            # Step 3: Convert the time_values list to a DataFrame
+            time_df = pd.DataFrame(time_values, columns=['Stroke End Time'])
+
+            # Step 4: Add the 'Stroke End Time' DataFrame back into 'combined_df' as a column
+            combined_df['Stroke End Time'] = pd.Series(time_df['Stroke End Time'].values, index=combined_df.index[:len(time_df)])
+
+            # Drop the first two columns and move "time" column to the first position
+            combined_df_cleaned = combined_df.drop(combined_df.columns[:2], axis=1)
+            columns = ['Stroke End Time'] + [col for col in combined_df_cleaned.columns if col != 'Stroke End Time']
+            combined_df_cleaned = combined_df_cleaned[columns]
+
+            # Generate the output path for the cleaned CSV file
+            combined_csv_output_path = output_path / "timed_stroke_metrics.csv"
+            combined_df_cleaned.to_csv(combined_csv_output_path, index=False)
+
+            print(f"Cleaned stroke metrics saved to: {combined_csv_output_path}")
+
+        except Exception as e:
+            print(f"Error processing {exp_dir}: {e}")
+
+
 
     # att_exp  = ExpReader(exps[93], verbose = True)
     # att_stroke_extr = StrokeExtractor(att_exp)

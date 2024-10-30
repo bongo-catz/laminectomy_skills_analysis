@@ -39,8 +39,8 @@ def gen_args():
     )
     parser.add_argument("-e",
                         "--exp_csv", 
-                        default= "../data/SDF_UserStudy_Data/exp_dirs.csv",
-                        help="CSV with recordings mapping")
+                        default= "/Users/orenw/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/exp_dirs_DONOTOVERWRITE.csv",
+                        help="CSV with recordings mapping") # ADJUST FILEPATH
 
     # parse command line arguments and start the main procedure
     args = parser.parse_args()

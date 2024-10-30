@@ -65,8 +65,8 @@ def gen_args():
     )
     parser.add_argument("-e",
                         "--exp_csv", 
-                        default= "../data/SDF_UserStudy_Data/exp_dirs.csv",
-                        help="CSV with recordings mapping")
+                        default= "/Users/orenw/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/exp_dirs_DONOTOVERWRITE.csv",
+                        help="CSV with recordings mapping") # ADJUST FILEPATH
 
     # parse command line arguments and start the main procedure
     args = parser.parse_args()
@@ -83,6 +83,54 @@ def main():
     recordings: List of recording folders
     csv_out: CSV file name under which the result will be saved
     """
+    args = gen_args()
+    rec_df = pd.read_csv(args.exp_csv)
+    experiments = rec_df['exp_dir'].tolist()
+    recordings = [exp + "/000" for exp in experiments]
+
+    for rec in recordings:
+        rec_name = rec.split("/")[-2]
+        if not os.path.exists(rec + "/eye0.mp4"):
+            logger.warning(f"Recording {rec_name} does not include any eye0.mp4 file!")
+            continue
+        
+        try:
+            logger.info(f"Extracting {rec_name}...")
+            process_recording(
+                rec, args.out_prefix, overwrite=args.overwrite, 
+                history_length_seconds=args.filter_length, 
+                onset_confidence_threshold=args.onset, 
+                offset_confidence_threshold=args.offset
+            )
+        
+        # Catch any error that indicates missing or problematic data
+        except (FileNotFoundError, IOError, KeyError) as e:
+            logger.warning(f"Error processing {rec_name}: {str(e)}. Skipping to the next recording.")
+            logger.debug(tb.format_exc())
+            continue  # Skip to the next iteration in case of an error
+        
+        except Exception as e:
+            # Catch any other exceptions to ensure the loop continues
+            logger.error(f"An unexpected error occurred with {rec_name}: {str(e)}")
+            logger.debug(tb.format_exc())
+            continue
+
+
+"""
+def main():
+    
+
+
+    Process given recordings one by one
+
+    Iterates over each recording and handles cases where no pupil.pldata or
+    pupil_timestamps.npy files could be found.
+
+    recordings: List of recording folders
+    csv_out: CSV file name under which the result will be saved
+    
+
+
     args = gen_args()
     rec_df = pd.read_csv(args.exp_csv)
     experiments = rec_df['exp_dir'].tolist()
@@ -104,7 +152,7 @@ def main():
                 f"The recording {rec_name} did not include any prerecorded pupil files!"
             )
             logger.debug(tb.format_exc())
-
+"""
 
 def process_recording(recording, csv_out_prefix, overwrite=False, **algorithm_kwargs):
     """Process a single recording

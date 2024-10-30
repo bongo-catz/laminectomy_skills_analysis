@@ -16,6 +16,7 @@ import pandas as pd
 from exp_reader import ExpReader 
 import cv2
 import os
+import logging
 
 def gen_video(exp_dir):
     """
@@ -69,27 +70,41 @@ def gen_video(exp_dir):
 
     np.save(output_timestamps_f, np.array(upsampled_timestamps))
 
-
+# For iterating through all folders in the directory and extracting video
 def main():
-    # parser = ArgumentParser()
-    # parser.add_argument("--exp_csv", 
-    #                         action="store", 
-    #                         dest="exp_csv", 
-    #                         help="Specify experiments directory", 
-    #                         default = '/Users/nimeshnagururu/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/exp_dirs.csv')
+    parser = ArgumentParser()
+    parser.add_argument("--exp_csv", 
+                        action="store", 
+                        dest="exp_csv", 
+                        help="Specify experiments directory", 
+                        default='/Users/orenw/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/exp_dirs_DONOTOVERWRITE.csv')
     
-    # args = parser.parse_args()
-    # csv = pd.read_csv(args.exp_csv)
+    args = parser.parse_args()
+    csv = pd.read_csv(args.exp_csv)
 
-    # exp = list(csv['exp_dir'])
-    # for e in exp:
-    #     e = Path(e)
-    #     if not (e / '000/world.mp4').exists() and not (e / 'world.mp4').exists():
-    #         gen_video(Path(e))
+    exp = list(csv['exp_dir'])
     
-    gen_video(Path('/Users/nimeshnagururu/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/Participant_9/2023-02-10 09:45:37_anatE_haptic_P9T5'))
-    
+    for e in exp:
+        e = Path(e)
+        # Check if both '000/world.mp4' and 'world.mp4' don't exist
+        if not e.exists():
+            logging.warning(f"{e} doesn't exist. Skipping...")
+            continue
+        
+        elif (e / '000/world.mp4').exists() or (e / 'world.mp4').exists():
+            logging.warning(f"'000/world.mp4' and/or 'world.mp4' already exist in directory {e}. Skipping...")
+            continue
 
+        # If files exist, call the gen_video function
+        gen_video(Path(e))
+
+"""
+# For generating video only for one specific trial
+def main():
+    
+    gen_video(Path('/Users/orenw/Documents/tb_skills_analysis/data/SDF_UserStudy_Data/Participant_10/2023-02-10 10:23:22_anatT_baseline_P10T1'))
+
+"""   
 
 if __name__ == "__main__":
 	main()

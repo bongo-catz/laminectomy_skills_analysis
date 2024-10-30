@@ -16,6 +16,10 @@ def save_dict_to_hdf5(data, filename):
     - data (dict): Dictionary where keys are strings and values are numpy arrays.
     - filename (str): Filename for the HDF5 file.
     """
+    print(f"Saving data to {filename}...")  # Log the save action
+    # Check if dictionary is valid
+    # print(f"Dictionary contents: {dictionary}")
+
     with h5py.File(filename, "w") as hdf:
         for key, value in data.items():
             hdf.create_dataset(key, data=value)
