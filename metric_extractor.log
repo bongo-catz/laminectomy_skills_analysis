@@ -1,0 +1,66 @@
+2025-05-27 22:48:30,013 - INFO - Logging to file: metric_extractor.log
+2025-05-27 22:48:30,013 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P0_L1_color
+2025-05-27 22:48:30,297 - INFO - Error processing /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P0_L1_color: boolean index did not match indexed array along dimension 0; dimension is 146605 but corresponding boolean dimension is 146450
+2025-05-27 22:48:30,298 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P0_L3_color
+2025-05-27 22:48:36,849 - INFO - Stroke end data saved to output_laminectomy/klobo_P0_L3_color/stroke_end_data.csv
+2025-05-27 22:48:36,849 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P0_L3_color/stroke_end_data.csv
+2025-05-27 22:48:36,861 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P0_L3_color/timed_stroke_metrics.csv
+2025-05-27 22:48:36,861 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P1_L1_no_color
+2025-05-27 22:48:42,920 - INFO - Stroke end data saved to output_laminectomy/klobo_P1_L1_no_color/stroke_end_data.csv
+2025-05-27 22:48:42,920 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P1_L1_no_color/stroke_end_data.csv
+2025-05-27 22:48:42,933 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P1_L1_no_color/timed_stroke_metrics.csv
+2025-05-27 22:48:42,933 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P1_L3_no_color
+2025-05-27 22:48:57,496 - INFO - Stroke end data saved to output_laminectomy/klobo_P1_L3_no_color/stroke_end_data.csv
+2025-05-27 22:48:57,496 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P1_L3_no_color/stroke_end_data.csv
+2025-05-27 22:48:57,509 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P1_L3_no_color/timed_stroke_metrics.csv
+2025-05-27 22:48:57,509 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P2_L1_no_color
+2025-05-27 22:49:05,744 - INFO - Stroke end data saved to output_laminectomy/klobo_P2_L1_no_color/stroke_end_data.csv
+2025-05-27 22:49:05,744 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P2_L1_no_color/stroke_end_data.csv
+2025-05-27 22:49:05,757 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P2_L1_no_color/timed_stroke_metrics.csv
+2025-05-27 22:49:05,757 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P2_L2_color
+2025-05-27 22:49:11,704 - INFO - Stroke end data saved to output_laminectomy/klobo_P2_L2_color/stroke_end_data.csv
+2025-05-27 22:49:11,704 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P2_L2_color/stroke_end_data.csv
+2025-05-27 22:49:11,714 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P2_L2_color/timed_stroke_metrics.csv
+2025-05-27 22:49:11,714 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P4_L1_no_color
+2025-05-27 22:49:11,987 - INFO - Error processing /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P4_L1_no_color: boolean index did not match indexed array along dimension 0; dimension is 126679 but corresponding boolean dimension is 126620
+2025-05-27 22:49:11,987 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P4_L2_color
+2025-05-27 22:49:19,063 - INFO - Stroke end data saved to output_laminectomy/klobo_P4_L2_color/stroke_end_data.csv
+2025-05-27 22:49:19,063 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P4_L2_color/stroke_end_data.csv
+2025-05-27 22:49:19,072 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P4_L2_color/timed_stroke_metrics.csv
+2025-05-27 22:49:19,072 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P7_L1_color
+2025-05-27 22:49:27,377 - INFO - Stroke end data saved to output_laminectomy/klobo_P7_L1_color/stroke_end_data.csv
+2025-05-27 22:49:27,378 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P7_L1_color/stroke_end_data.csv
+2025-05-27 22:49:27,390 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P7_L1_color/timed_stroke_metrics.csv
+2025-05-27 22:49:27,390 - INFO - Processing: /Volumes/Elements/4-6-Testing/klobo-participant/klobo_P7_L3_no_color
+2025-05-27 22:49:34,560 - INFO - Stroke end data saved to output_laminectomy/klobo_P7_L3_no_color/stroke_end_data.csv
+2025-05-27 22:49:34,560 - INFO - Stroke ends CSV saved to: output_laminectomy/klobo_P7_L3_no_color/stroke_end_data.csv
+2025-05-27 22:49:34,570 - INFO - Cleaned stroke metrics saved to: output_laminectomy/klobo_P7_L3_no_color/timed_stroke_metrics.csv
+2025-05-27 22:49:34,570 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P0_L1_color
+2025-05-27 22:49:48,185 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P0_L1_color/stroke_end_data.csv
+2025-05-27 22:49:48,185 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P0_L1_color/stroke_end_data.csv
+2025-05-27 22:49:48,202 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P0_L1_color/timed_stroke_metrics.csv
+2025-05-27 22:49:48,203 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P0_L3_color
+2025-05-27 22:50:02,259 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P0_L3_color/stroke_end_data.csv
+2025-05-27 22:50:02,259 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P0_L3_color/stroke_end_data.csv
+2025-05-27 22:50:02,278 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P0_L3_color/timed_stroke_metrics.csv
+2025-05-27 22:50:02,278 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P1_L1_no_color
+2025-05-27 22:50:14,233 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P1_L1_no_color/stroke_end_data.csv
+2025-05-27 22:50:14,233 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P1_L1_no_color/stroke_end_data.csv
+2025-05-27 22:50:14,245 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P1_L1_no_color/timed_stroke_metrics.csv
+2025-05-27 22:50:14,245 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P1_L3_no_color
+2025-05-27 22:50:28,368 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P1_L3_no_color/stroke_end_data.csv
+2025-05-27 22:50:28,368 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P1_L3_no_color/stroke_end_data.csv
+2025-05-27 22:50:28,382 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P1_L3_no_color/timed_stroke_metrics.csv
+2025-05-27 22:50:28,382 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P2_L1_no_color
+2025-05-27 22:50:39,778 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P2_L1_no_color/stroke_end_data.csv
+2025-05-27 22:50:39,778 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P2_L1_no_color/stroke_end_data.csv
+2025-05-27 22:50:39,788 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P2_L1_no_color/timed_stroke_metrics.csv
+2025-05-27 22:50:39,788 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P2_L2_color
+2025-05-27 22:50:52,610 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P2_L2_color/stroke_end_data.csv
+2025-05-27 22:50:52,610 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P2_L2_color/stroke_end_data.csv
+2025-05-27 22:50:52,621 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P2_L2_color/timed_stroke_metrics.csv
+2025-05-27 22:50:52,621 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P4_L1_no_color
+2025-05-27 22:51:09,141 - INFO - Stroke end data saved to output_laminectomy/pexvxk_P4_L1_no_color/stroke_end_data.csv
+2025-05-27 22:51:09,141 - INFO - Stroke ends CSV saved to: output_laminectomy/pexvxk_P4_L1_no_color/stroke_end_data.csv
+2025-05-27 22:51:09,157 - INFO - Cleaned stroke metrics saved to: output_laminectomy/pexvxk_P4_L1_no_color/timed_stroke_metrics.csv
+2025-05-27 22:51:09,157 - INFO - Processing: /Volumes/Elements/4-6-Testing/pexvxk-participant/pexvxk_P4_L2_color

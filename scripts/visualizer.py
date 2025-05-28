@@ -1,6 +1,6 @@
 import h5py
 import numpy as np
-from plotting_skills_analysis import StrokeMetricsVisualizer
+from classes.plotting_skills_analysis import StrokeMetricsVisualizer
 
 def load_hdf5_file(file_path):
     """

@@ -13,7 +13,7 @@ from collections import OrderedDict
 from natsort import natsorted
 import numpy as np
 import pandas as pd
-from exp_reader import ExpReader 
+from classes.exp_reader import ExpReader 
 import cv2
 import os
 import logging

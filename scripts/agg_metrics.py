@@ -13,8 +13,8 @@ Author: Nimesh Nagururu
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from exp_reader import ExpReader
-from metric_extractor import StrokeMetrics, StrokeExtractor, GenMetrics
+from classes.exp_reader import ExpReader
+from classes.metric_extractor import StrokeMetrics, StrokeExtractor, GenMetrics
 
 def run_agg_metrics(df, output_dir, num_buckets):
     """
