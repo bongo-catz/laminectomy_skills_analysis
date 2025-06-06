@@ -3,6 +3,7 @@ import numpy as np
 from scipy import integrate
 from scipy.spatial.transform import Rotation as R
 from utils.hdf5_utils import save_dict_to_hdf5
+import logging as log
 
 class StrokeMetrics:
     """
@@ -114,13 +115,18 @@ class StrokeMetrics:
         avg_stroke_force = []
         stroke_forces = 0
         
-        forces = forces[:,:3] # excluding torques
-        forces_ts = forces_ts[:forces.shape[0]] # Avoids mutex error, where extra timestamps are recorded
-
+        #forces = forces[:,:3] # excluding torques
+        #forces_ts = forces_ts[:forces.shape[0]] # Avoids mutex error, where extra timestamps are recorded
+        # Safety: ensure alignment
+        forces = forces[:,:3]  # use only linear forces
+        min_len = min(len(forces), len(forces_ts))
+        forces = forces[:min_len]
+        forces_ts = forces_ts[:min_len]
         
         for i in range(len(stroke_endtimes) - 1):
-            stroke_mask = [f_ts >= stroke_endtimes[i] and f_ts < 
-                           stroke_endtimes[i+1] for f_ts in forces_ts]
+            # stroke_mask = [f_ts >= stroke_endtimes[i] and f_ts < 
+            #                stroke_endtimes[i+1] for f_ts in forces_ts]
+            stroke_mask = (forces_ts >= stroke_endtimes[i]) & (forces_ts < stroke_endtimes[i+1])
             stroke_forces = np.linalg.norm(forces[stroke_mask], axis=1) # Only considering magnitudes of forces here
             avg_stroke_force.append(np.mean(stroke_forces))
                 
@@ -342,9 +348,15 @@ class StrokeMetrics:
 
         d_poses = d_poses[data_vrm_mask]
         data_ts = data_ts[data_vrm_mask]
-        forces = forces[:,:3] # Again excluding torques
-        forces_ts = forces_ts[:forces.shape[0]] # Again avoiding mutex error
-                              
+        
+        # forces = forces[:,:3] # Again excluding torques
+        # forces_ts = forces_ts[:forces.shape[0]] # Again avoiding mutex error
+        # Safety: ensure alignment
+        forces = forces[:,:3]  # use only linear forces
+        min_len = min(len(forces), len(forces_ts))
+        forces = forces[:min_len]
+        forces_ts = forces_ts[:min_len]
+                                
         avg_angles_per_stroke = []
 
         for i in range(len(stroke_endtimes) - 1):
@@ -479,13 +491,20 @@ class StrokeMetrics:
             Returns:
                 metrics_dict (dict): Dictionary of all stroke metrics.
         """
+        log.info("Extracting stroke length...")
         length = self.stroke_length(self.stroke_ends, self.exp.d_poses, self.data_vrm_mask)
+        log.info("Extracting stroke kinematics...")
         velocity, acceleration, jerk = self.extract_kinematics(self.exp.d_poses, self.exp.data_ts, self.stroke_ends, self.data_vrm_mask)
+        log.info("Extracting stroke curvature...")
         curvature = self.extract_curvature(self.exp.d_poses, self.exp.data_ts, self.stroke_ends, self.data_vrm_mask)
+        log.info("Extracting orientation wrt camera...")
         orientation_wrt_camera = self.orientation_wrt_camera(self.stroke_ends, self.stroke_endtimes, self.exp.d_poses, self.exp.cam_poses, self.exp.data_ts, self.data_vrm_mask)
+        log.info("Extracting voxels removed per stroke...")
         voxels_removed = self.voxels_removed(self.stroke_endtimes, self.exp.v_rm_ts, self.exp.v_rm_locs)
 
+        log.info("Extracting stroke forces...")
         force = self.stroke_force(self.exp.forces, self.exp.forces_ts, self.stroke_endtimes)
+        log.info("Extracting stroke contact orientation...")
         contact_angle = self.contact_orientation(self.stroke_endtimes, self.exp.d_poses, self.exp.data_ts, self.data_vrm_mask, self.exp.forces, self.exp.forces_ts)
         
         if not sum(np.isnan(force)) > 0.5*len(force):
@@ -535,7 +554,9 @@ class StrokeMetrics:
         """
         Saves the stroke metrics and voxel bucket dict to HDF5 files.
         """
+        log.info("Calculating metrics for strokes...")
         metrics = self.calc_metrics()
+        log.info("Assigning strokes to voxel buckets...")
         bucket_dict = self.assign_strokes_to_voxel_buckets()
 
         save_dict_to_hdf5(metrics, output_path / 'stroke_metrics.hdf5')

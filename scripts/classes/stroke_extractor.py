@@ -108,7 +108,9 @@ class StrokeExtractor:
         Returns:
             np.ndarray: List of 1's and 0's indicating whether a stroke has ended.
         '''
-        
+        # Add validation
+        assert len(d_poses) == len(data_ts), "d_poses and data_ts must have same length"
+        assert len(data_ts) == len(data_vrm_mask), "data_ts and data_vrm_mask must have same length"
         d_pos = d_poses[data_vrm_mask][:,:3]
         data_ts = data_ts[data_vrm_mask]
         K_p = []
@@ -125,7 +127,7 @@ class StrokeExtractor:
             theta = np.arccos(cos_theta) * 180 / np.pi
             K = 180 - theta # now in degrees
             K_p.append(K)
-
+        
         # Detect pivot points as points with k-cosines greater than mu + sig
         mu = np.mean(K_p)
         sig = np.std(K_p)
@@ -133,10 +135,10 @@ class StrokeExtractor:
         for i in range(k):
             K_p.insert(0, mu)
             K_p.append(mu)
-
+        
         stroke_ends = [1 if k_P > mu + sig else 0 for k_P in K_p]
         stroke_ends = np.array(stroke_ends)
-
+        
         # Calculate speeds as tiebreak for consecutive pivot points
         position_diffs = np.diff(d_pos, axis=0)
         dists = np.linalg.norm(position_diffs, axis=1)
@@ -145,7 +147,7 @@ class StrokeExtractor:
         speeds = np.insert(speeds, 0, 0)
 
         pivot_props = np.where(stroke_ends == 1)[0]  # Indices where stroke_ends == 1
-
+        
         # Iterate over pivot_props and eliminate consecutive ones
         i = 0
         while i < len(pivot_props) - 1:
@@ -159,9 +161,9 @@ class StrokeExtractor:
                     if j != start + min_val_index:
                         stroke_ends[pivot_props[j]] = 0
             i += 1
-
+            
         stroke_ends[len(stroke_ends)-1] = 1
-
+        
         # Optionally save the result to a CSV file
         if output_csv_path:
             # Create a DataFrame to store the timestamps and stroke ends

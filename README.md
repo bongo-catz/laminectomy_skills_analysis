@@ -13,3 +13,8 @@ All scripts are well commented, describing use and usage.
 | Aggregate metrics across experiments for analysis    | `~/scripts/agg_metrics.py`   |
 | Statistical comparison of novices and experts          | `~/output_SDF/` |
 
+## Analysis Workflow
+
+1. Run `metrics_extractor.py` to produce a directory containing different subdirectories containing stroke metrics from participants in user study
+2. Run `merge_csv.py` to produce a merged_csv file containing all stroke metrics for ALL participants
+3. Run `clustering.py` on merged_csv file
