@@ -136,7 +136,5 @@ def main():
 
     run_agg_metrics(df, Path(output_dir), num_buckets)
 
-
-    
 if __name__ == "__main__":
     main()

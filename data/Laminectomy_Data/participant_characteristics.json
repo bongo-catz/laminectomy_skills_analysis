@@ -1,0 +1,13 @@
+[
+    {"participant": "pexvxk", "date": "4/6/23", "gender": 0, "position": "resident", "yrs_prev_exp": 2, "did_nasa_tlx": 0, "med_prof": 1, "yrs_practice_slf_rprt": 2, "freq_drill": 0},
+    {"participant": "klobo", "date": "4/6/23", "gender": 0, "position": "resident", "yrs_prev_exp": 2, "did_nasa_tlx": 0, "med_prof": 1, "yrs_practice_slf_rprt": 3, "freq_drill": 1},
+    {"participant": "tbpq", "date": "4/6/23", "gender": 0, "position": "resident", "yrs_prev_exp": 3, "did_nasa_tlx": 0, "med_prof": 1, "yrs_practice_slf_rprt": 0, "freq_drill": 0},
+    {"participant": "cxoxe", "date": "4/13/23", "gender": 0, "position": "resident", "yrs_prev_exp": 4, "did_nasa_tlx": 0, "med_prof": null, "yrs_practice_slf_rprt": null, "freq_drill": 1},
+    {"participant": "exoofp", "date": "4/27/23", "gender": 0, "position": "resident", "yrs_prev_exp": 3, "did_nasa_tlx": 1, "med_prof": 1, "yrs_practice_slf_rprt": 3, "freq_drill": 1},
+    {"participant": "vbpex", "date": "4/27/23", "gender": 1, "position": "resident", "yrs_prev_exp": 1, "did_nasa_tlx": 1, "med_prof": 1, "yrs_practice_slf_rprt": 1, "freq_drill": 0},
+    {"participant": "grxk", "date": "4/27/23", "gender": 0, "position": "med school", "yrs_prev_exp": 2, "did_nasa_tlx": 1, "med_prof": 0, "yrs_practice_slf_rprt": null, "freq_drill": 0},
+    {"participant": "oxzebi", "date": "4/27/23", "gender": 1, "position": "resident", "yrs_prev_exp": 4, "did_nasa_tlx": 1, "med_prof": 1, "yrs_practice_slf_rprt": 4, "freq_drill": 1},
+    {"participant": "jxga", "date": "5/4/23", "gender": 0, "position": "resident", "yrs_prev_exp": 3, "did_nasa_tlx": 1, "med_prof": 1, "yrs_practice_slf_rprt": 3, "freq_drill": 1},
+    {"participant": "zixox", "date": "5/4/23", "gender": 1, "position": "resident", "yrs_prev_exp": 3, "did_nasa_tlx": 1, "med_prof": 1, "yrs_practice_slf_rprt": 4, "freq_drill": 1},
+    {"participant": "axkfbi", "date": "5/4/23", "gender": 0, "position": "resident", "yrs_prev_exp": 4, "did_nasa_tlx": 1, "med_prof": 1, "yrs_practice_slf_rprt": 3, "freq_drill": 0}
+]

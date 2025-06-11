@@ -4,6 +4,7 @@ from scipy import integrate
 from scipy.spatial.transform import Rotation as R
 from utils.hdf5_utils import save_dict_to_hdf5
 import logging as log
+import pandas as pd
 
 class StrokeMetrics:
     """
@@ -66,9 +67,17 @@ class StrokeMetrics:
         self.data_vrm_mask = stroke_extr.data_vrm_mask
         self.stroke_endtimes = self.get_stroke_endtimes(self.stroke_ends, self.data_vrm_mask, self.exp.data_ts)
         self.num_buckets = num_buckets
-
-        self.bucket_dict = self.assign_strokes_to_voxel_buckets()
         
+        # Add voxel color data if available, ensure voxel colors and timestamps are aligned
+        if hasattr(stroke_extr.exp, 'v_rm_colors') and hasattr(stroke_extr.exp, 'v_rm_ts'):
+            min_len = min(len(stroke_extr.exp.v_rm_colors), len(stroke_extr.exp.v_rm_ts))
+            self.v_rm_colors = stroke_extr.exp.v_rm_colors[:min_len]
+            # Make sure we use the same length for timestamps
+            self.exp.v_rm_ts = self.exp.v_rm_ts[:min_len]
+        else:
+            self.v_rm_colors = None
+        
+        self.bucket_dict = self.assign_strokes_to_voxel_buckets()
         # Add this line to check if data is loaded correctly
         # log.info(f"Experiment data: {self.exp.d_poses}, {self.exp.data_ts}, {self.exp.v_rm_ts}")  
 
@@ -507,12 +516,26 @@ class StrokeMetrics:
         log.info("Extracting stroke contact orientation...")
         contact_angle = self.contact_orientation(self.stroke_endtimes, self.exp.d_poses, self.exp.data_ts, self.data_vrm_mask, self.exp.forces, self.exp.forces_ts)
         
+        # Calculate color breakdown if available
+        if self.v_rm_colors is not None:
+            log.info("Calculating voxel color breakdown...")
+            color_breakdowns = [self.compute_voxel_color_breakdown(i) for i in range(len(self.stroke_endtimes)-1)]
+            green_pct = [bd["Green"] for bd in color_breakdowns]
+            yellow_pct = [bd["Yellow"] for bd in color_breakdowns] 
+            red_pct = [bd["Red"] for bd in color_breakdowns]
+            other_pct = [bd["Other"] for bd in color_breakdowns]
+        else:
+            green_pct = yellow_pct = red_pct = other_pct = np.zeros(len(self.stroke_endtimes)-1)
+        
         if not sum(np.isnan(force)) > 0.5*len(force):
             metrics_dict = {'length': length, 'velocity': velocity, 'acceleration': acceleration, 'jerk': jerk, 'vxls_removed': voxels_removed, 
-                            'curvature': curvature, 'force': force, 'angle_wrt_bone': contact_angle, 'angle_wrt_camera': orientation_wrt_camera}
+                            'curvature': curvature, 'force': force, 'angle_wrt_bone': contact_angle, 'angle_wrt_camera': orientation_wrt_camera,
+                            'voxel_pct_green': green_pct, 'voxel_pct_yellow': yellow_pct, 'voxel_pct_red': red_pct, 'voxel_pct_other': other_pct,
+                            'voxels_removed_rgba': self.v_rm_colors if self.v_rm_colors is not None else np.array([])}
         else:
             metrics_dict = {'length': length, 'velocity': velocity, 'acceleration': acceleration, 'jerk': jerk, 'vxls_removed': voxels_removed,
-                            'curvature': curvature, 'angle_wrt_camera': orientation_wrt_camera}
+                            'curvature': curvature, 'angle_wrt_camera': orientation_wrt_camera, 'voxel_pct_green': green_pct, 'voxel_pct_yellow': yellow_pct,
+                            'voxel_pct_red': red_pct, 'voxel_pct_other': other_pct, 'voxels_removed_rgba': self.v_rm_colors if self.v_rm_colors is not None else np.array([])}
        
         # log.info(f"Metrics calculated: {metrics_dict}") # for checking if metrics are being calculated
         return metrics_dict
@@ -563,3 +586,62 @@ class StrokeMetrics:
         save_dict_to_hdf5(bucket_dict, output_path / 'stroke_buckets.hdf5')
 
         return metrics, bucket_dict
+    
+    @staticmethod
+    def classify_voxel_color(alpha_adjusted):
+        """Classify voxel color based on normalized alpha value."""
+        if alpha_adjusted == 1.0:
+            return "Green"
+        elif alpha_adjusted == 0.3:
+            return "Yellow"
+        elif alpha_adjusted in [0.1, 0.2]:
+            return "Red"
+        else:
+            return "Other"
+
+    def compute_voxel_color_breakdown(self, stroke_idx):
+        """
+        Computes percentage breakdown of voxel colors removed in a stroke.
+        
+        Args:
+            stroke_idx (int): Index of the stroke to analyze
+            
+        Returns:
+            dict: Dictionary with percentage of each color category
+        """
+        if self.v_rm_colors is None:
+            return {"Green": 0, "Yellow": 0, "Red": 0, "Other": 100}
+            
+        # Get voxel timestamps for this stroke
+        start_time = self.stroke_endtimes[stroke_idx]
+        end_time = self.stroke_endtimes[stroke_idx + 1]
+        
+        # Find voxels removed during this stroke
+        stroke_mask = (self.exp.v_rm_ts >= start_time) & (self.exp.v_rm_ts < end_time)
+        stroke_voxels = self.v_rm_colors[stroke_mask]
+        
+        if len(self.exp.v_rm_ts) != len(self.v_rm_colors):
+            min_len = min(len(self.exp.v_rm_ts), len(self.v_rm_colors))
+            stroke_mask = (self.exp.v_rm_ts[:min_len] >= start_time) & (self.exp.v_rm_ts[:min_len] < end_time)
+            stroke_voxels = self.v_rm_colors[:min_len][stroke_mask]
+        else:
+            stroke_mask = (self.exp.v_rm_ts >= start_time) & (self.exp.v_rm_ts < end_time)
+            stroke_voxels = self.v_rm_colors[stroke_mask]
+        
+        if len(stroke_voxels) == 0:
+            return {"Green": 0, "Yellow": 0, "Red": 0, "Other": 100}
+            
+        # Normalize alpha values and classify
+        alpha_values = stroke_voxels[:, 3] / 255.0
+        labels = [self.classify_voxel_color(round(alpha, 1)) for alpha in alpha_values]
+        
+        # Calculate percentages
+        total_voxels = len(labels)
+        color_counts = pd.Series(labels).value_counts(normalize=True) * 100
+        
+        return {
+            "Green": color_counts.get("Green", 0),
+            "Yellow": color_counts.get("Yellow", 0),
+            "Red": color_counts.get("Red", 0),
+            "Other": color_counts.get("Other", 0)
+        }

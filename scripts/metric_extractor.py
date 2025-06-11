@@ -12,21 +12,27 @@ import h5py
 import click
 import logging as log
 
-# example usage: python3 scripts/metric_extractor.py --exp-csv data/Laminectomy_Data/exp_dirs.csv --output-base-dir output_laminectomy
+# example usage: python3 scripts/metric_extractor.py 
+#                  --exp-csv data/Laminectomy_Data/exp_dirs_comp.csv 
+#                  --output-base-dir output_laminectomy_everyone
+#                  --num-buckets 10
+#                  --log-path metric_extractor.log
+
 @click.command()
 @click.option('--exp-csv', required=True, type=click.Path(exists=True),
               help='Path to the CSV file containing experiment directories.')
 @click.option('--output-base-dir', required=True, type=click.Path(),
               help='Path to base directory for saving output metrics.')
+@click.option('--num-buckets', default=5, show_default=True,
+              help='Number of buckets to classify strokes into.')
 @click.option("--log-path", required=True, type=click.Path(),
               help='Path to log file to see outputs.')
-def main(exp_csv, output_base_dir, log_path):
+def main(exp_csv, output_base_dir, num_buckets, log_path):
     exp_csv = pd.read_csv(exp_csv)
     exps = exp_csv['exp_dir']
-    
     log.basicConfig(filename=log_path, filemode='w',
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=log.INFO)
+                format='%(asctime)s - %(levelname)s - %(message)s',
+                level=log.INFO)
     log.info(f"Logging to file: {log_path}")
 
     for i in range(len(exps)):
@@ -49,18 +55,20 @@ def main(exp_csv, output_base_dir, log_path):
         try:
             novice_exp = ExpReader(exp_dir, verbose=True)
             novice_stroke_extr = StrokeExtractor(novice_exp)
-            novice_stroke_metr = StrokeMetrics(novice_stroke_extr, num_buckets=5)
+            novice_stroke_metr = StrokeMetrics(novice_stroke_extr, num_buckets=num_buckets)
             
             # Define the output path for metrics and CSV files
             output_path = Path(output_base_dir) / os.path.basename(exp_dir)
             output_path.mkdir(parents=True, exist_ok=True)
 
+            log.info("Save Stroke Metrics and Buckets...")
             # Save stroke metrics and bucket assignments to the output path
             novice_stroke_metr.save_stroke_metrics_and_buckets(output_path)
             
             # Generate the output path for the CSV file
             csv_output_path = output_path / "stroke_end_data.csv"
             
+            log.info("Going to extract strokes...")
             # Save stroke ends to CSV
             stroke_ends = novice_stroke_extr._get_strokes(
                 novice_exp.d_poses, 
@@ -69,7 +77,7 @@ def main(exp_csv, output_base_dir, log_path):
                 k=3, 
                 output_csv_path=str(csv_output_path)
             )
-
+            log.info("FINISHED extracting strokes...")
             log.info(f"Stroke ends CSV saved to: {csv_output_path}")
 
             # Combine the stroke end data and stroke metrics
@@ -86,7 +94,13 @@ def main(exp_csv, output_base_dir, log_path):
                 curvatures = f['curvature'][:]
                 voxels_removed = f['vxls_removed'][:]
                 angle_wrt_camera = f['angle_wrt_camera'][:]
-
+                # Load color-related data if available
+                voxel_colors = f['voxels_removed_rgba'][:] if 'voxels_removed_rgba' in f else None
+                green_pct = f['voxel_pct_green'][:] if 'voxel_pct_green' in f else np.zeros(len(stroke_lengths))
+                yellow_pct = f['voxel_pct_yellow'][:] if 'voxel_pct_yellow' in f else np.zeros(len(stroke_lengths))
+                red_pct = f['voxel_pct_red'][:] if 'voxel_pct_red' in f else np.zeros(len(stroke_lengths))
+                other_pct = f['voxel_pct_other'][:] if 'voxel_pct_other' in f else np.zeros(len(stroke_lengths))
+            
             # Create a DataFrame for stroke metrics with the valid fields
             stroke_metrics_df = pd.DataFrame({
                 'Length': stroke_lengths,
@@ -96,11 +110,15 @@ def main(exp_csv, output_base_dir, log_path):
                 'Curvature': curvatures,
                 'Voxels Removed': voxels_removed,
                 'Angle with Respect to Camera': angle_wrt_camera,
+                'Voxel % Green': green_pct,
+                'Voxel % Yellow': yellow_pct,
+                'Voxel % Red': red_pct,
+                'Voxel % Other': other_pct
             })
 
             # Combine stroke_end_data with stroke_metrics DataFrame
             combined_df = stroke_end_data.join(stroke_metrics_df)
-
+    
             # Create a list to store the 'Stroke End Time' values
             time_values = []
 
